@@ -1,5 +1,5 @@
 all:
-	clang++ syslog.cpp -o syslog
+	clang++ -lsqlite3 syslog.cpp -o syslog
 clean:
 	rm syslog
 
