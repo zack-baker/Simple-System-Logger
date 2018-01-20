@@ -16,6 +16,7 @@ static int callback(void* data, int argc, char** argv, char** azColName){
 void print_usage(const char* bin_name){
 	printf("USAGE: %s SET [log type]\n", bin_name);
 	printf("       %s REC <number of logs>\n", bin_name);
+	printf("       %s -h\n",bin_name);
 }
 
 /** This method verifies if the given input is valid and which method to employ
@@ -23,26 +24,26 @@ void print_usage(const char* bin_name){
 		- argc: number of arguments provided to the program, including the binary name
 		- argv: the arguments provided to the argument, including the binary name
 	OUTPUT:
-		This method returns 1 if an entry is being added to the db, 2 if logs are being recalled, 3 if logs are being recalled and a number of logs is explicitly specified
+		This method returns 1 if an entry is being added to the db, 2 if logs are being recalled
 
 */
 int verify_args(int argc, char const* argv[]){
 	int method = 0;
-	if(argc<2){
+	if(argc<2){//IF there are too few arguments
 		fprintf(stderr, "[ERROR] Incorrect usage - too few arguments\n");
 		print_usage(argv[0]);
 		exit(_BAD_ARGS);
 	}
-	if(strcmp(argv[1],"-h")==0){
+	if(strcmp(argv[1],"-h")==0){//if the help message is queued
 		print_usage(argv[0]);
 		exit(_HELP_MSG);
 	}
-	if(strcmp(argv[1],"SET")!=0 && strcmp(argv[1],"REC")!=0){
+	if(strcmp(argv[1],"SET")!=0 && strcmp(argv[1],"REC")!=0){//if a proper keyword was not given
 		fprintf(stderr,"[ERROR] Incorrect usage - not a proper keyword\n");
 		print_usage(argv[0]);
 		exit(_BAD_ARGS);
 	}
-	if(strcmp(argv[1],"SET")==0 && argc==2){
+	if(strcmp(argv[1],"SET")==0 && argc==2){//If the SET method is used but no log type is given
 		fprintf(stderr, "[ERROR] Incorrect usage - too few arguments for SET\n");
 		print_usage(argv[0]);
 		exit(_BAD_ARGS);
@@ -53,13 +54,10 @@ int verify_args(int argc, char const* argv[]){
 	if(strcmp(argv[1],"REC")==0 && argc==2){
 		method = 2;
 	}
-	if(strcmp(argv[1],"REC")==0 && argc==3){
-		method = 3;
-	}
 	return method;
 }
 /**
-* This function converts a string to its uppercase equivalent
+* This function converts a string to its uppercase equivalent and returns the result
 */
 char* to_upper(const char* arg){
 	int size = strlen(arg);
@@ -70,37 +68,40 @@ char* to_upper(const char* arg){
 	printf("New str is %s\n", upper_str);
 	return upper_str;
 }
+
+void write_log(const char* argv[], sqlite3* db){
+	char* log_type = to_upper(argv[2]);//convert the log type to uppercase, for uniformity
+	printf("Log Type: %s\n", log_type);
+	printf("Additional comment - ");
+	char* comment = new char[1024];
+	scanf("%1024[^\n]",comment);
+	time_t cur_time = time(NULL);
+	struct tm tm = *localtime(&cur_time);
+	stringstream insert_sql_ss;
+	insert_sql_ss << "INSERT INTO logs(LOG_TIME, LOG_TYPE, COMMENTS) VALUES (\"" << tm.tm_year+1900 << "-" << tm.tm_mon+1 << "-" << tm.tm_mday << " " << tm.tm_hour << ":" << tm.tm_min << ":" << tm.tm_sec << "\",\"" << log_type << "\",\"" << comment << "\");";
+	string insert_sql_str = insert_sql_ss.str();
+	printf("SQL statement: %s",insert_sql_str.c_str());
+	const char* insert_sql_cstr = insert_sql_str.c_str();
+	rc = sqlite3_exec(db, insert_sql_cstr, callback,0,0);
+	if(rc==SQLITE_ABORT){
+		fprintf(stderr, "[ERROR] Error inserting into db, exiting\n");
+		exit(_DB_QUERY_ERROR);
+	}	
+}
 int main(int argc, char const *argv[])
 {
-	verify_args(argc, argv);
+	int method_type = verify_args(argc, argv);// Verify input validity
 	sqlite3* db;
-	int rc = sqlite3_open("syslog.db",&db);
+	int rc = sqlite3_open("syslog.db",&db);//open a connection to the database
 	if(rc){//if an error occured connecting to the database
 		fprintf(stderr, "[ERROR] Cannot connect to database: %s\n", sqlite3_errmsg(db));
 		exit(_DB_CONN_ERROR);
 	}
 	const char* create_table_sql = "CREATE TABLE if not exists logs(ID INTEGER PRIMARY KEY AUTOINCREMENT, LOG_TIME DATETIME NOT NULL, LOG_TYPE NVARCHAR NOT NULL, COMMENTS VARCHAR)";
-	rc = sqlite3_exec(db, create_table_sql, callback, 0, 0);
+	rc = sqlite3_exec(db, create_table_sql, callback, 0, 0);//create the logs table if it doesn't exist already
 	/* SET action */
-	if(strcmp(argv[1],"SET")==0){
-		char* log_type = to_upper(argv[2]);
-		printf("Log Type: %s\n", log_type);
-		printf("Additional comment - ");
-		char* comment = new char[1024];
-		scanf("%1024[^\n]",comment);
-		time_t cur_time = time(NULL);
-		struct tm tm = *localtime(&cur_time);
-		stringstream insert_sql_ss;
-		insert_sql_ss << "INSERT INTO logs(LOG_TIME, LOG_TYPE, COMMENTS) VALUES (\"" << tm.tm_year+1900 << "-" << tm.tm_mon+1 << "-" << tm.tm_mday << " " << tm.tm_hour << ":" << tm.tm_min << ":" << tm.tm_sec << "\",\"" << log_type << "\",\"" << comment << "\");";
-		string insert_sql_str = insert_sql_ss.str();
-		printf("SQL statement: %s",insert_sql_str.c_str());
-		const char* insert_sql_cstr = insert_sql_str.c_str();
-		rc = sqlite3_exec(db, insert_sql_cstr, callback,0,0);
-		if(rc==SQLITE_ABORT){
-			fprintf(stderr, "[ERROR] Error inserting into db, exiting\n");
-			exit(_DB_QUERY_ERROR);
-		}
-
+	if(method_type==1){//IF using SET
+		write_log(argv, db);
 	}
 	/*REC action */
 
