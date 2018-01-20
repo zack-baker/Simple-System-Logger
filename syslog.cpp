@@ -87,7 +87,7 @@ int main(int argc, char const *argv[])
 		printf("Log Type: %s\n", log_type);
 		printf("Additional comment - ");
 		char* comment = new char[1024];
-		scanf("%s",comment);
+		scanf("%1024[^\n]",comment);
 		time_t cur_time = time(NULL);
 		struct tm tm = *localtime(&cur_time);
 		stringstream insert_sql_ss;
