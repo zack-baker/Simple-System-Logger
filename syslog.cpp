@@ -49,12 +49,16 @@ int verify_args(int argc, char const* argv[]){
 		exit(_BAD_ARGS);
 	}
 	if(strcmp(argv[1],"SET")==0){
-		method = 1;
+		return _SET_REQ;
 	}
 	if(strcmp(argv[1],"REC")==0 && argc==2){
-		method = 2;
+		return _REC_REQ;
 	}
-	return method;
+	else{
+		fprintf(stderr, "[ERROR] Unexpected behaviour");
+		print_usage(argv[0]);
+		exit(_BAD_ARGS);
+	}
 }
 /**
 * This function converts a string to its uppercase equivalent and returns the result
@@ -82,17 +86,25 @@ void write_log(const char* argv[], sqlite3* db){
 	string insert_sql_str = insert_sql_ss.str();
 	printf("SQL statement: %s",insert_sql_str.c_str());
 	const char* insert_sql_cstr = insert_sql_str.c_str();
-	rc = sqlite3_exec(db, insert_sql_cstr, callback,0,0);
+	int rc = sqlite3_exec(db, insert_sql_cstr, callback,0,0);
 	if(rc==SQLITE_ABORT){
 		fprintf(stderr, "[ERROR] Error inserting into db, exiting\n");
 		exit(_DB_QUERY_ERROR);
 	}	
 }
+
+void recall_log(const char* argv[], sqlite3* db){
+
+}	
+
 int main(int argc, char const *argv[])
 {
 	int method_type = verify_args(argc, argv);// Verify input validity
 	sqlite3* db;
 	int rc = sqlite3_open("syslog.db",&db);//open a connection to the database
+	char* name = (char*)malloc(sizeof(char)*1024);
+	getlogin_r(name, 1024);
+	printf("Name is: %s",name);
 	if(rc){//if an error occured connecting to the database
 		fprintf(stderr, "[ERROR] Cannot connect to database: %s\n", sqlite3_errmsg(db));
 		exit(_DB_CONN_ERROR);
@@ -100,10 +112,13 @@ int main(int argc, char const *argv[])
 	const char* create_table_sql = "CREATE TABLE if not exists logs(ID INTEGER PRIMARY KEY AUTOINCREMENT, LOG_TIME DATETIME NOT NULL, LOG_TYPE NVARCHAR NOT NULL, COMMENTS VARCHAR)";
 	rc = sqlite3_exec(db, create_table_sql, callback, 0, 0);//create the logs table if it doesn't exist already
 	/* SET action */
-	if(method_type==1){//IF using SET
+	if(method_type==_SET_REQ){//IF using SET
 		write_log(argv, db);
 	}
 	/*REC action */
+	if(method_type==_REC_REQ){
+		recall_log(argv, db);
+	}	
 
 	return 0;
 }
