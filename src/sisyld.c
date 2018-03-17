@@ -140,6 +140,6 @@ int main(){
 		}
 		close(client_socket_file_descriptor);//close the current client's connection and prepare for the next incoming connection
 	}
-
+	closelog();
 	return EXIT_SUCCESS;
 }

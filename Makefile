@@ -1,4 +1,4 @@
 all:
-	gcc -o sisyld sisyld.c
+	gcc -o bin/sisyld src/sisyld.c
 clean:
-	rm sisyld
+	rm bin/sisyld
