@@ -1,0 +1,6 @@
+In no particular order
+* Establish what the DB should look like
+* Figure out how to set up C Unit Tests
+* Figure out a good interface for the daemon
+	- research that command line arg parser
+
