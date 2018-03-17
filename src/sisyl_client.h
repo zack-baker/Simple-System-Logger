@@ -12,4 +12,4 @@
 void print_usage(int, char*);
 char* send_request(char*);
 void query_daemon_insert(char*, char*, char*, char*, char*);
-int main(argc, argv);
+int main(int, char**);
