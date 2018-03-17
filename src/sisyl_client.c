@@ -1,14 +1,17 @@
-#include <stdio.h>
-#include <unistd.h>
-#include <stdlib.h>
-#include <string.h>
-#include <sys/types.h>
-#include <pwd.h>
-#include <time.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <netdb.h>
+#include "sisyl_client.h"
 
+/**
+*	This function prints usage information if incorrect arguments are provided, to help inform the user as to it's expected input
+*	INPUT:
+		- mode - the format of usage information:
+			* mode==0 - user mishandled SET operation
+			* mode==1 - user mishandled GET operation
+			* mode==2 - user did not provide either SET or GET
+		- name - the name of the binary, i.e. argv[0]
+	OUTPUT:
+		- none
+*
+*/
 void print_usage(int mode, char* name){
 	if(mode==0){
 		fprintf(stderr, "USAGE: %s SET -l LEVEL -t TITLE [-d description]\n", name);
@@ -22,9 +25,10 @@ void print_usage(int mode, char* name){
 /**
 *	This function sends the char* query to the SiSyL daemon to process, and returns it's response
 *	INPUT:
-		- char* query - the char* which holds the query for the daemon
+		- query - the char* which holds the query for the daemon
 	OUTPUT:
 		- the response from the daemon
+*
 */
 char* send_request(char* query){
 	int socket_file_descriptor;//variable to hold the file descriptor of the communication socket 
@@ -65,11 +69,11 @@ char* send_request(char* query){
 /**
 *	This function takes the consituent arguments from the user and constructs them into one char* to send to the daemon as a request. 
 *	INPUT:
-		- char* level - a char* holding the string representing the level of log entry
-		- char* title - a char* holding the title of the log entry
-		- char* description - a char* holding the longform description of the log entry
-		- char* user - a char* holding the username of the user invoking the client
-		- char* time - a char* holding a string representing the current UNIX timestamp
+		- level - a char* holding the string representing the level of log entry
+		- title - a char* holding the title of the log entry
+		- description - a char* holding the longform description of the log entry
+		- user - a char* holding the username of the user invoking the client
+		- time - a char* holding a string representing the current UNIX timestamp
 	OUTPUT:
 		none
 */
@@ -82,19 +86,30 @@ void query_daemon_insert(char* level, char* title, char* description, char* user
 	send_request(query);//send the complete query to the daemon
 }
 
-
+/**
+*	This is the main function of the client. 
+*	INPUT:
+		- argc - the number of command line arguments
+		- argv - the arguments to the client.
+			* argv[1] must be either "SET" or "GET", to specify the type of request to the daemon
+			* the other arguments are some combination of -l $level, -t $title, and [-d $description]. -l and -t are required. -d is optional. 
+	OUTPUT
+		- 0 if operation successful
+		- 1 otherwise
+*/
 int main(int argc, char** argv)
 {
 	int iter = 0;
-	if(argc<2){
+	if(argc<2){//if the user didn't provide any arguments, show usage information and exit
 		print_usage(2,argv[0]);
 		exit(1);
 	}
-	if(strcmp(argv[1],"SET")==0){
+	if(strcmp(argv[1],"SET")==0){//if the first argument is SET, the user wishes to make a new log entry. 
+		//initialize the character arrays to hold the inputs
 		char* level = NULL;
 		char* title = NULL;
 		char* desc = NULL;
-		printf("SETting db\n");
+		//use getopt to parse the input flags (TODO: ensure proper behavior for all input. Works on valid input, unsure about invalid input )
 		while((iter=getopt(argc, argv,"l:t:d::"))!=-1){
 			switch(iter){
 				case 'l': level = optarg;
@@ -105,29 +120,33 @@ int main(int argc, char** argv)
 		printf("Level is: %s\n", level);
 		printf("Title is: %s\n", title);
 		printf("Description is %s\n", desc);
+		//if log level wasn't provided, print usage information
 		if(atoi(level)==0){
 			fprintf(stderr, "Please provide level\n");
 			print_usage(0, argv[0]);
+			exit(1);
 		}
+		//if log title wasn't provided, print usage information
 		if(title==NULL){
 			fprintf(stderr, "Please provide title\n");
 			print_usage(0, argv[0]);
+			exit(1);
 		}
 
-		char* user = (getpwuid(getuid()))->pw_name;
-		printf("Username is %s\n", user);
-		time_t secs = time(NULL);
-		printf("Current timestamp is %ld\n", secs);
+		char* user = (getpwuid(getuid()))->pw_name;//get the username of the user who invoked the client
+		time_t secs = time(NULL);//get the current UNIX time
 		char secs_str[64];
-		sprintf(secs_str,"%ld", secs);
-		printf("Time as str is: %s\n",secs_str);
+		sprintf(secs_str,"%ld", secs);//convert the time into a character array for the query (TODO: Figure out proper size)
 
-		query_daemon_insert(level, title, desc, user, secs_str);
+		query_daemon_insert(level, title, desc, user, secs_str);//create and send the query
+
+		exit(1);
 
 	}else if(strcmp("GET",argv[1])==0){
 		printf("GETting db");
-	}else{
+	}else{//if arg[1] is neither SET nor GET, print usage information
 		print_usage(2,argv[0]);
+		exit(1);
 	}
 	
 	return 0;
