@@ -1,14 +1,9 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <signal.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <syslog.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <string.h>
+#include "sisyld.h"
 
+
+/**
+*	This function sets up the program as a daemon
+*/
 void daemon_skeleton(){
 	pid_t pid; //the pid of the daemon fork
 
@@ -45,39 +40,52 @@ void daemon_skeleton(){
 	return;
 }
 
-/* void handle_input(char* input, int input_len){
-	
-	char* fifo_message = malloc(sizeof(char)*1024);
-	//read socket(?) here 
-	//syslog(LOG_NOTICE, "reading request...\n");
-	int readstatus = fread(fifo_message,1,3,fifo);
-	if(readstatus==0){
-	//	syslog(LOG_CRIT,"ERROR: fread failed");
-		exit(EXIT_FAILURE);
-	}
-	printf("received:%s", fifo_message);
-	//make db call
-	//syslog(LOG_NOTICE, "Content receieved: %s", fifo_message);
-	//send response
 
-} */
 
-void process_request(char* request, size_t request_len){
+
+/*
+*	This function handles the incoming request to the daemon
+*	INPUT:
+		- request - a char* which holds the request to process
+		- request_len - the size of request
+	OUTPUT:
+		- returns an integer corresponding to the relative success of the execution of the request, as described below:
+		|----------------------------------------------|
+		|   code    |              status              |
+		|----------------------------------------------|
+		|      0    | request execution was successful |
+		|     -1    | request type was null or empty   |
+		|  INT_MIN  | unknown error                    |
+		|----------------------------------------------|
+*/
+int process_request(char* request, size_t request_len){
 	syslog(LOG_INFO, "[INFO] Request receieved: %s", request);
-}
-
-
-FILE* safeopen(char* filename){
-
-	FILE* f = fopen(filename, "r+");
-	if(f==NULL){
-	//	syslog(LOG_CRIT, "ERROR: Communication queue couldn't be opened at %s", filename);
-		exit(EXIT_FAILURE);
-	}else{
-	//	syslog(LOG_NOTICE, "Communication queue %s opened successfully", filename);
+	//we want to make a copy of the request received because strtok_r, used to split the request to parse it's contents, modifies the given pointer
+	char req_copy[request_len];
+	strcpy(req_copy, request);
+	char* req_type; //make a char* to hold the kind of request made. Request types are always 3 characters (GET, SET)
+	char* save_ptr;
+	req_type = strtok_r(req_copy, " ", &save_ptr);
+	syslog(LOG_INFO, "[INFO] REQ type is %s", req_type);
+	if(strcmp(req_type,"GET")!=0 && strcmp(req_type,"SET")!=0){//if the request type isn't SET or GET, alert the user and abort
+		syslog(LOG_WARNING, "[WARN] Unrecognized request type");
+		return -1; 
 	}
-	return f;
+	else if(strcmp(req_type,"GET")==0){// if the request is a "get" request, handle it here
+		syslog(LOG_INFO,"[INFO] Request of type GET");
+		return process_get(request, request_len);
+	}	
+	else if(strcmp(req_type,"SET")==0){// if the request is a "set" request, handle it here
+		syslog(LOG_INFO, "[INFO] Request of type SET");
+		return process_set(request, request_len);
+	}else{
+		//we should never get here. There must be a missed condition if we do.
+		return INT_MIN;
+	}
+
 }
+
+
 /**
 *	This is the main method of the daemon. It will create the process as a daemon, and then start a server to listen to incoming requests (by default on port 8585). 
 */
