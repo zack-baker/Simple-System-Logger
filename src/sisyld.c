@@ -35,7 +35,7 @@ void daemon_skeleton(){
 	}
 
 	//make a log in the official system log
-	openlog("sysld",LOG_PID, LOG_DAEMON);
+	openlog("sisyld",LOG_PID, LOG_DAEMON);
 
 	return;
 }
