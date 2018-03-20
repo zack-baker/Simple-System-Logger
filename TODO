@@ -4,3 +4,4 @@ In no particular order
 * Figure out a good interface for the daemon
 	- research that command line arg parser
 * Find good authentication system
+* Figure out how to parse the input properly (strange delimiter + escaping)
