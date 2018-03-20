@@ -42,7 +42,17 @@ void daemon_skeleton(){
 
 
 
-
+/**
+*	This function handles SET requests. SET requests are structured as follows: SET $level $date $user $title $description 
+*/
+int process_set(char* request, size_t request_len){
+	char* saveptr;
+	char* res = strtok_r(request, " ", &saveptr);//process the request's first item. we don't care about it, since we already know the type of request. This helps streamline data extraction later in the function
+	return 0;
+}
+int process_get(char* request, size_t request_len){
+	return 0;
+}
 /*
 *	This function handles the incoming request to the daemon
 *	INPUT:
