@@ -12,4 +12,5 @@
 void print_usage(int, char*);
 char* send_request(char*);
 void query_daemon_insert(char*, char*, char*, char*, char*);
-int main(int, char**);
+char* get_description(int,char**);
+int process_args(int, char**);
