@@ -45,25 +45,29 @@ void test_get_description_unicode(CuTest* tc){
 	char* result=  get_description(argc, args);
 	CuAssertStrEquals(tc, "ѬՒ༂Δǣ", result);
 }
-
+//unicode with space description test
 void test_get_description_unicode_long(CuTest* tc){
 	char* args[8] = {"./sisyl_client", "SET", "-l", "1", "-t", "title", "⚑❹ⴰ", "ᢆᢆᢆᢆᢆᢆᘐᖠᖰ"};
 	int argc = 8;
 	char* result = get_description(argc, args);
 	CuAssertStrEquals(tc, "⚑❹ⴰ ᢆᢆᢆᢆᢆᢆᘐᖠᖰ", result);
 }
-void tess_get_description_RTL(CuTest* tc){
+//Right-to-Left text description test
+void test_get_description_RTL(CuTest* tc){
 	char* args[7] = {"./sisyl_client", "SET", "-l", "1", "-t", "title", "وصف"};
 	int argc = 7;
 	char* result = get_description(argc, args);
 	CuAssertStrEquals(tc, "وصف", result);
 }
+//Right-to-Left text with spaces description test
 void test_get_description_RTL_long(CuTest* tc){
 	char* args[8] = {"./sisyl_client", "SET", "-l", "1", "-t", "title","مرحبا","بالعالم"};
 	int argc = 8;
 	char* result = get_description(argc, args);
 	CuAssertStrEquals(tc, "مرحبا بالعالم", result);
 }
+
+//Get description method test suite
 CuSuite* get_description_get_suite(){
 	CuSuite* suite = CuSuiteNew();
 	SUITE_ADD_TEST(suite, test_get_description_basic);
@@ -72,7 +76,7 @@ CuSuite* get_description_get_suite(){
 	SUITE_ADD_TEST(suite, test_get_description_empty);
 	SUITE_ADD_TEST(suite, test_get_description_unicode);
 	SUITE_ADD_TEST(suite, test_get_description_unicode_long);
-	SUITE_ADD_TEST(suite, tess_get_description_RTL);
+	SUITE_ADD_TEST(suite, test_get_description_RTL);
 	SUITE_ADD_TEST(suite, test_get_description_RTL_long);
 	return suite;
 }
@@ -81,4 +85,85 @@ CuSuite* get_description_get_suite(){
 
 /* process_args tests */
 
-// 
+//proper usage test
+void test_process_args_basic(CuTest* tc){
+	char* args[10] = {"./sisyl_client", "SET", "-l", "1", "-t", "title", "this", "is", "a", "description"};
+	int argc = 10;
+	int result = process_args(argc, args);
+	CuAssertIntEquals(tc, 0, result);
+}
+
+//no argument test
+void test_process_args_no_args(CuTest* tc){
+	char* args[1] = {"./sisyl_client"};
+	int argc = 1;
+	int result = process_args(argc, args);
+	CuAssertIntEquals(tc, 1, result);
+}
+
+//only "SET" argument test
+void test_process_args_only_set(CuTest* tc){
+	char* args[2] = {"./sisyl_client", "SET"};
+	int argc = 2;
+	int result = process_args(argc, args);
+	CuAssertIntEquals(tc, 2,result);
+}
+
+//no title test
+void test_process_args_no_title(CuTest* tc){
+	char* args[4] = {"./sisyl_client", "SET", "-l", "1"};
+	int argc = 4;
+	int result = process_args(argc, args);
+	CuAssertIntEquals(tc, 3, result);
+}
+
+//level flag but no level arg test
+void test_process_args_no_level_arg(CuTest* tc){
+	char* args[3] = {"./sisyl_client", "SET", "-l"};
+	int argc = 3;
+	int result = process_args(argc, args);
+	CuAssertIntEquals(tc, 2, result);
+}
+//title but no level test
+void test_process_args_title_no_level(CuTest* tc){
+	char* args[4] = {"./sisyl_client", "SET", "-t", "title"};
+	int argc = 4;
+	int result = process_args(argc, args);
+	CuAssertIntEquals(tc, 2, result);
+}
+//no title argument test
+void test_process_args_no_title_arg(CuTest* tc){
+	char* args[5] = {"./sisyl_client", "SET", "-l", "1", "-t"};
+	int argc = 5;
+	int result = process_args(argc, args);
+	CuAssertIntEquals(tc, 3, result);
+}
+void test_process_args_bad_command(CuTest* tc){
+	char* args[2] = {"./sisyl_client", "GREP"};
+	int argc = 2;
+	int result = process_args(argc, args);
+	CuAssertIntEquals(tc, 4, result);
+}
+void test_process_args_command_typo(CuTest* tc){
+	char* args[7] = {"./sisyl_client", "SEY", "-l", "1", "-t", "Title", "test"};
+	int argc = 7;
+	int result = process_args(argc, args);
+	CuAssertIntEquals(tc, 4, result);
+}
+
+
+
+// process_args method test suite
+CuSuite* process_args_get_suite(){
+	CuSuite* suite = CuSuiteNew();
+	//SUITE_ADD_TEST(suite, test_process_args_basic);
+	SUITE_ADD_TEST(suite, test_process_args_no_args);
+	SUITE_ADD_TEST(suite, test_process_args_only_set);
+	SUITE_ADD_TEST(suite, test_process_args_no_title);
+	SUITE_ADD_TEST(suite, test_process_args_title_no_level);
+	SUITE_ADD_TEST(suite, test_process_args_no_level_arg);
+	SUITE_ADD_TEST(suite, test_process_args_no_title_arg); //bizarre optarg issue
+	SUITE_ADD_TEST(suite, test_process_args_bad_command);
+	SUITE_ADD_TEST(suite, test_process_args_command_typo);
+	return suite;
+}
