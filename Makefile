@@ -2,7 +2,7 @@
 CC=gcc
 
 #compile flags
-CFLAGS = -std=gnu99 
+CFLAGS = -Wall -std=gnu99 
 
 all:
 	mkdir -p bin
