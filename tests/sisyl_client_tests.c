@@ -12,7 +12,7 @@ void test_get_description_basic(CuTest* tc){
 	char* args[8] = {"./sisyl_client", "SET", "-l", "1", "-t", "title", "test", "description"};
 	int argc = 8;
 	char* result = get_description(argc, args);
-	CuAssertStrEquals(tc, "test description", result);
+	CuAssertStrEquals(tc, "testdescription", result);
 }
 //one-word description test
 void test_get_description_one_word(CuTest* tc){
