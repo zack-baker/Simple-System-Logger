@@ -46,6 +46,24 @@ void test_get_description_unicode(CuTest* tc){
 	CuAssertStrEquals(tc, "ѬՒ༂Δǣ", result);
 }
 
+void test_get_description_unicode_long(CuTest* tc){
+	char* args[8] = {"./sisyl_client", "SET", "-l", "1", "-t", "title", "⚑❹ⴰ", "ᢆᢆᢆᢆᢆᢆᘐᖠᖰ"};
+	int argc = 8;
+	char* result = get_description(argc, args);
+	CuAssertStrEquals(tc, "⚑❹ⴰ ᢆᢆᢆᢆᢆᢆᘐᖠᖰ", result);
+}
+void tess_get_description_RTL(CuTest* tc){
+	char* args[7] = {"./sisyl_client", "SET", "-l", "1", "-t", "title", "وصف"};
+	int argc = 7;
+	char* result = get_description(argc, args);
+	CuAssertStrEquals(tc, "وصف", result);
+}
+void test_get_description_RTL_long(CuTest* tc){
+	char* args[8] = {"./sisyl_client", "SET", "-l", "1", "-t", "title","مرحبا","بالعالم"};
+	int argc = 8;
+	char* result = get_description(argc, args);
+	CuAssertStrEquals(tc, "مرحبا بالعالم", result);
+}
 CuSuite* get_description_get_suite(){
 	CuSuite* suite = CuSuiteNew();
 	SUITE_ADD_TEST(suite, test_get_description_basic);
@@ -53,6 +71,9 @@ CuSuite* get_description_get_suite(){
 	SUITE_ADD_TEST(suite, test_get_description_long);
 	SUITE_ADD_TEST(suite, test_get_description_empty);
 	SUITE_ADD_TEST(suite, test_get_description_unicode);
+	SUITE_ADD_TEST(suite, test_get_description_unicode_long);
+	SUITE_ADD_TEST(suite, tess_get_description_RTL);
+	SUITE_ADD_TEST(suite, test_get_description_RTL_long);
 	return suite;
 }
 
