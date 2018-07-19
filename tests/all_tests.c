@@ -3,22 +3,27 @@
 #include <stdlib.h>
 
 CuSuite* get_description_get_suite();
+CuSuite* process_args_get_suite();
 
-void runAllTests(){
+int runSuite(CuSuite* suite){
 	CuString* output = CuStringNew();
-	CuSuite* suite = CuSuiteNew();
-
-	CuSuiteAddSuite(suite, get_description_get_suite());
 
 	CuSuiteRun(suite);
-	CuSuiteSummary(suite,output);
+
+	CuSuiteSummary(suite, output);
 	CuSuiteDetails(suite, output);
+
 	printf("%s\n", output->buffer);
 
-	if(suite->failCount>0){//if we had failures, exit with a non-zero exit code
+	return suite->failCount;
+}
+void runAllTests(){
+	int totalFails = 0;
+	totalFails += runSuite(get_description_get_suite());
+	totalFails += runSuite(process_args_get_suite());
+	if(totalFails>0){
 		exit(1);
 	}
-
 }
 
 int main()
