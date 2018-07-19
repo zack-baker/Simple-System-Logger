@@ -14,6 +14,10 @@ void runAllTests(){
 	CuSuiteDetails(suite, output);
 	printf("%s\n", output->buffer);
 
+	if(suite->failCount>0){
+		exit(1);
+	}
+
 }
 
 int main()
