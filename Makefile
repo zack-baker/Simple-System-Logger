@@ -1,5 +1,5 @@
 all:
-	mkdir bin
+	mkdir -p bin
 	gcc -o bin/sisyld src/sisyld.c
 	gcc -o bin/sisyl_client src/sisyl_client_lib.c src/sisyl_client.c
 clean:
