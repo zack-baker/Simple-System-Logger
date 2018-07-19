@@ -37,12 +37,22 @@ void test_get_description_empty(CuTest* tc){
 	char* result = get_description(argc, args);
 	CuAssertPtrEquals(tc, NULL, result);
 }
+
+//unicode description test
+void test_get_description_unicode(CuTest* tc){
+	char* args[7] = {"./sisyl_client", "SET", "-l", "1", "-t", "title", "ѬՒ༂Δǣ"};
+	int argc=7;
+	char* result=  get_description(argc, args);
+	CuAssertStrEquals(tc, "ѬՒ༂Δǣ", result);
+}
+
 CuSuite* get_description_get_suite(){
 	CuSuite* suite = CuSuiteNew();
 	SUITE_ADD_TEST(suite, test_get_description_basic);
 	SUITE_ADD_TEST(suite, test_get_description_one_word);
 	SUITE_ADD_TEST(suite, test_get_description_long);
 	SUITE_ADD_TEST(suite, test_get_description_empty);
+	SUITE_ADD_TEST(suite, test_get_description_unicode);
 	return suite;
 }
 
