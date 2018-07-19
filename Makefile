@@ -1,9 +1,15 @@
+#compiler
+CC=gcc
+
+#compile flags
+CFLAGS = -std=gnu99 
+
 all:
 	mkdir -p bin
-	gcc -std=gnu99 -o bin/sisyld src/sisyld.c
-	gcc -std=gnu99 -o bin/sisyl_client src/sisyl_client_lib.c src/sisyl_client.c
+	$(CC) $(CFLAGS)  -o bin/sisyld src/sisyld.c
+	$(CC) $(CFLAGS)  -o bin/sisyl_client src/sisyl_client_lib.c src/sisyl_client.c
 clean:
 	rm bin/*
 test:
-	gcc -std=gnu99 -o bin/run_sisyl_client_tests tests/all_tests.c tests/CuTest.c tests/sisyl_client_tests.c src/sisyl_client_lib.c 
+	$(CC) $(CFLAGS) -o bin/run_sisyl_client_tests tests/all_tests.c tests/CuTest.c tests/sisyl_client_tests.c src/sisyl_client_lib.c 
 	./bin/run_sisyl_client_tests
