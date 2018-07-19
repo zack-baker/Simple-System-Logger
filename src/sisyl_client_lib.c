@@ -111,6 +111,9 @@ void query_daemon_insert(char* level, char* title, char* description, char* user
 int process_args(int argc, char** argv){
 
 	int iter = 0;//variable used for getopt loops
+	printf("~~~~~~ ");
+	print_args(argc, argv);
+
 
 	if(argc<2){//if the user didn't provide any arguments, show usage information and exit
 		print_usage(2,argv[0]);
@@ -168,6 +171,7 @@ int process_args(int argc, char** argv){
 
 	}else if(strcmp("GET",argv[1])==0){
 		printf("GETting db");
+		return 0;
 	}else{//if arg[1] is neither SET nor GET, print usage information
 		print_usage(2,argv[0]);
 		return 4;
@@ -213,3 +217,12 @@ char* get_description(int argc, char** argv){
 
 }	
 
+void print_args(int argc, char** argv){
+	for(int i=0;i<argc;i++){
+		printf("%s", argv[i]);
+		if(i!=argc-1){
+			printf(" ");
+		}
+	}
+	printf("\n");
+}
