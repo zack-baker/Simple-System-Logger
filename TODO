@@ -1,7 +1,10 @@
-In no particular order
 * Establish what the DB should look like
-* Figure out how to set up C Unit Tests
 * Figure out a good interface for the daemon
 	- research that command line arg parser
 * Find good authentication system
 * Figure out how to parse the input properly (strange delimiter + escaping)
+* Create tests for the remainder of the sisyl_client library
+* Reformat makefile to be "proper"
+* create struct for result from process_args function
+* isolate query_daemon function from process_args function
+
