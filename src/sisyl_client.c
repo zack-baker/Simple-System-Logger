@@ -13,6 +13,8 @@
 */
 int main(int argc, char** argv)
 {
-	process_args(argc, argv);
+	Params* p = process_args(argc, argv);
+	printf("return_code: %d\n", p->return_code);
+
 	return 0;
 }
