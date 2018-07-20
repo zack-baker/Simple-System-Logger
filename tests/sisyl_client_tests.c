@@ -89,74 +89,90 @@ CuSuite* get_description_get_suite(){
 void test_process_args_basic(CuTest* tc){
 	char* args[10] = {"./sisyl_client", "SET", "-l", "1", "-t", "title", "this", "is", "a", "description"};
 	int argc = 10;
-	int result = process_args(argc, args);
-	CuAssertIntEquals(tc, 0, result);
+	Params* result = process_args(argc, args);
+	CuAssertIntEquals(tc, 0, result->return_code);
+	free(result);
 }
 
 //no argument test
 void test_process_args_no_args(CuTest* tc){
 	char* args[1] = {"./sisyl_client"};
 	int argc = 1;
-	int result = process_args(argc, args);
-	CuAssertIntEquals(tc, 1, result);
+	Params* result = process_args(argc, args);
+	CuAssertIntEquals(tc, 1, result->return_code);
+	free(result);
 }
 
 //only "SET" argument test
 void test_process_args_only_set(CuTest* tc){
 	char* args[2] = {"./sisyl_client", "SET"};
 	int argc = 2;
-	int result = process_args(argc, args);
-	CuAssertIntEquals(tc, 2,result);
+	Params* result = process_args(argc, args);
+	CuAssertIntEquals(tc, 2, result->return_code);
+	free(result);
 }
 
 //no title test
 void test_process_args_no_title(CuTest* tc){
 	char* args[4] = {"./sisyl_client", "SET", "-l", "1"};
 	int argc = 4;
-	int result = process_args(argc, args);
-	CuAssertIntEquals(tc, 3, result);
+	Params* result = process_args(argc, args);
+	CuAssertIntEquals(tc, 3, result->return_code);
+	free(result);
 }
 
 //level flag but no level arg test
 void test_process_args_no_level_arg(CuTest* tc){
 	char* args[3] = {"./sisyl_client", "SET", "-l"};
 	int argc = 3;
-	int result = process_args(argc, args);
-	CuAssertIntEquals(tc, 2, result);
+	Params* result = process_args(argc, args);
+	CuAssertIntEquals(tc, 2, result->return_code);
+	free(result);
 }
 //title but no level test
 void test_process_args_title_no_level(CuTest* tc){
 	char* args[4] = {"./sisyl_client", "SET", "-t", "title"};
 	int argc = 4;
-	int result = process_args(argc, args);
-	CuAssertIntEquals(tc, 2, result);
+	Params* result = process_args(argc, args);
+	CuAssertIntEquals(tc, 2, result->return_code);
+	free(result);
 }
 //no title argument test
 void test_process_args_no_title_arg(CuTest* tc){
+	printf("Test_process_args_no_title_arg_test\n");
 	char* args[5] = {"./sisyl_client", "SET", "-l", "1", "-t"};
 	int argc = 5;
-	int result = process_args(argc, args);
-	CuAssertIntEquals(tc, 3, result);
+	Params* result = process_args(argc, args);
+	CuAssertIntEquals(tc, 3, result->return_code);
+	free(result);
 }
 void test_process_args_bad_command(CuTest* tc){
 	char* args[2] = {"./sisyl_client", "GREP"};
 	int argc = 2;
-	int result = process_args(argc, args);
-	CuAssertIntEquals(tc, 4, result);
+	Params* result = process_args(argc, args);
+	CuAssertIntEquals(tc, 4, result->return_code);
+	free(result);
 }
 void test_process_args_command_typo(CuTest* tc){
 	char* args[7] = {"./sisyl_client", "SEY", "-l", "1", "-t", "Title", "test"};
 	int argc = 7;
-	int result = process_args(argc, args);
-	CuAssertIntEquals(tc, 4, result);
+	Params* result = process_args(argc, args);
+	CuAssertIntEquals(tc, 4, result->return_code);
+	free(result);
 }
-
+//arguments permuted test
+void test_process_args_permuted_args(CuTest* tc){
+	char* args[7] = {"./sisyl_client", "SET", "-t", "Title", "-l", "1", "test"};
+	int argc = 7;
+	Params* result = process_args(argc, args);
+	CuAssertIntEquals(tc, 0, result->return_code);
+	free(result);
+}
 
 
 // process_args method test suite
 CuSuite* process_args_get_suite(){
 	CuSuite* suite = CuSuiteNew();
-	//SUITE_ADD_TEST(suite, test_process_args_basic);
 	SUITE_ADD_TEST(suite, test_process_args_no_args);
 	SUITE_ADD_TEST(suite, test_process_args_only_set);
 	SUITE_ADD_TEST(suite, test_process_args_no_title);
@@ -165,5 +181,9 @@ CuSuite* process_args_get_suite(){
 	SUITE_ADD_TEST(suite, test_process_args_no_title_arg); //bizarre optarg issue
 	SUITE_ADD_TEST(suite, test_process_args_bad_command);
 	SUITE_ADD_TEST(suite, test_process_args_command_typo);
+	SUITE_ADD_TEST(suite, test_process_args_basic);
+	SUITE_ADD_TEST(suite, test_process_args_permuted_args);
+	
+	
 	return suite;
 }
