@@ -95,6 +95,7 @@ void query_daemon_insert(char* level, char* title, char* description, char* user
 *		- argc - an int holding the number of arguments in argv
 *		- argv - an array of char*s which holds the arguments to the program
 *	OUTPUT:
+		- returns a pointer to a params struct containing the parsed arguments
 		- an integer code related to the success of the argument handling
 			+-------+------------------------------------------------------------------------------+
 			|  code |                                   status                                     |
@@ -108,73 +109,90 @@ void query_daemon_insert(char* level, char* title, char* description, char* user
 			+-------+------------------------------------------------------------------------------+
 */
 
-int process_args(int argc, char** argv){
+Params* process_args(int argc, char** argv){
+	printf("~~~~~~~~~~~~~~~~~~~~~~\n");
+	Params* p = malloc(sizeof(Params));
+	p->title = NULL;
+	p->description = NULL;
+	p->level = INT_MIN;
 
 	int iter = 0;//variable used for getopt loops
-	printf("~~~~~~ ");
 	print_args(argc, argv);
 
 
 	if(argc<2){//if the user didn't provide any arguments, show usage information and exit
 		print_usage(2,argv[0]);
-		return 1;
+		p->return_code = 1;
+		return p;
+
 	}
 	if(strcmp(argv[1],"SET")==0){//if the first argument is SET, the user wishes to make a new log entry. 
 
 		//initialize the character arrays to hold the inputs
-		char* level = NULL;
-		char* title = NULL;
-		char* desc = NULL;
+		
+		p->request_type = "SET";
+		optind = 1;//reset getopt index. Important when running tests, since they all run in the same environment. This ensures getopt will read the entire argv array from the beginning
 
 		//use getopt to parse the input flags (TODO: ensure proper behavior for all input. Works on valid input, unsure about invalid input )
+		printf("Processing args...\n");
 		while((iter=getopt(argc, argv,"l:t:"))!=-1){
+			printf("Iter: %c\n", iter);
 			switch(iter){
-				case 'l': level = optarg; break;
-				case 't': title = optarg; break;
+				case 'l': p->level = atoi(optarg); break;				
+				case 't': p->title = optarg; break;
 			}
 		}
+		printf("args processed\n");
 		//if there are more args than getopt saw (not counting SET), then there is a description provided
 		if(optind<argc-1){
-			desc = get_description(argc, argv);
-			if(desc==NULL){
-				return 5;
+			p->description = get_description(argc, argv);
+			if(p->description==NULL){
+				p->return_code = 5;
+				return p;
 			}
 		}else{
-			desc = "<no description>";
+			p->description = "<no description>";
 		}
-		printf("Level is: %s\n", level);
-		printf("Title is: %s\n", title);
-		printf("Description is %s\n", desc);
-
-		//if log level wasn't provided, print usage information
-		if(level==NULL || atoi(level)==0){
+		printf("Level is: %d\n", p->level);
+		printf("Title is: %s\n", p->title);
+		printf("Description is %s\n", p->description);
+		if(p->level==INT_MIN){//if the level is not provided, and kept as INT_MIN, notify and exit
 			fprintf(stderr, "Please provide level\n");
 			print_usage(0, argv[0]);
-			return 2;
+			p->return_code = 2;
+			return p;
 		}
+		
+
 		//if log title wasn't provided, print usage information
-		if(title==NULL){
+		if(p->title==NULL){
 			fprintf(stderr, "Please provide title\n");
 			print_usage(0, argv[0]);
-			return 3;
+			p->return_code = 3;
+			return p;
 		}
 
 		printf("args good\n");
+		/*
 		char* user = (getpwuid(getuid()))->pw_name;//get the username of the user who invoked the client
 		time_t secs = time(NULL);//get the current UNIX time
 		char secs_str[64];
 		sprintf(secs_str,"%ld", secs);//convert the time into a character array for the query (TODO: Figure out proper size)
 
 		query_daemon_insert(level, title, desc, user, secs_str);//create and send the query
+		*/
 
-		return 0;
+		p->return_code = 0;
+		return p;
 
 	}else if(strcmp("GET",argv[1])==0){
 		printf("GETting db");
-		return 0;
+		p->return_code = 0;
+		return p;
 	}else{//if arg[1] is neither SET nor GET, print usage information
 		print_usage(2,argv[0]);
-		return 4;
+		p->return_code = 4;
+		return p;
 	}
 }
 
