@@ -72,21 +72,20 @@ void print_usage(int mode, char* name){
 /**
 *	This function takes the consituent arguments from the user and constructs them into one char* to send to the daemon as a request. 
 *	INPUT:
-		- level - a char* holding the string representing the level of log entry
-		- title - a char* holding the title of the log entry
-		- description - a char* holding the longform description of the log entry
-		- user - a char* holding the username of the user invoking the client
-		- time - a char* holding a string representing the current UNIX timestamp
+		- A pointer to a queryparam struct, containing the requests level, title, description, the name of the user invoking the request, and a char* representation of the current UNIX timestamp
 	OUTPUT:
-		none
+		returns a char* holding the full request
 */
-void query_daemon_insert(char* level, char* title, char* description, char* user, char* time){
-	size_t query_len = 8 + strlen(level) + strlen(title) + strlen(description) + strlen(user) + strlen(time); //this variable holds the length of the char* to create for the full query. The total size is the size of each individual char*, plus 3 (for the constant string "SET") plus 5 spaces. 
-	char query[query_len];//create the full query array
-	sprintf(query,"SET %s %s %s %s %s", level, title, description, user, time);//stick the individual arrays together
+char* get_daemon_insert_query(QueryParams* qp){
+	printf("In query former\n");
+	size_t query_len = 8 + strlen(qp->level) + strlen(qp->title) + strlen(qp->description) + strlen(qp->user) + strlen(qp->timestr); //this variable holds the length of the char* to create for the full query. The total size is the size of each individual char*, plus 3 (for the constant string "SET") plus 5 spaces. 
+	printf("Size is: %ld\n", query_len);
+	char* query = malloc(sizeof(char) * query_len);//create the full query array
+	printf("malloced query\n");
+	sprintf(query,"SET %s %s %s %s %s", qp->level, qp->title, qp->description, qp->user, qp->timestr);//stick the individual arrays together
+	printf("assigned query\n");
 	printf("Full query is %s\n", query);
-
-	send_request(query);//send the complete query to the daemon
+	return query;
 }
 
 /**
@@ -96,7 +95,7 @@ void query_daemon_insert(char* level, char* title, char* description, char* user
 *		- argv - an array of char*s which holds the arguments to the program
 *	OUTPUT:
 		- returns a pointer to a params struct containing the parsed arguments
-		- an integer code related to the success of the argument handling
+			- contains an integer code related to the success of the argument handling
 			+-------+------------------------------------------------------------------------------+
 			|  code |                                   status                                     |
 			+=======+==============================================================================+
@@ -109,25 +108,26 @@ void query_daemon_insert(char* level, char* title, char* description, char* user
 			+-------+------------------------------------------------------------------------------+
 */
 
-Params* process_args(int argc, char** argv){
+void* process_args(int argc, char** argv){
 	printf("~~~~~~~~~~~~~~~~~~~~~~\n");
-	Params* p = malloc(sizeof(Params));
-	p->title = NULL;
-	p->description = NULL;
-	p->level = INT_MIN;
+	
 
 	int iter = 0;//variable used for getopt loops
 	print_args(argc, argv);
 
 
 	if(argc<2){//if the user didn't provide any arguments, show usage information and exit
-		print_usage(2,argv[0]);
+		Params* p = malloc(sizeof(Params));
 		p->return_code = 1;
+		print_usage(2,argv[0]);
 		return p;
-
 	}
 	if(strcmp(argv[1],"SET")==0){//if the first argument is SET, the user wishes to make a new log entry. 
 
+		Params* p = malloc(sizeof(Params));
+		p->title = NULL;
+		p->description = NULL;
+		p->level = NULL;
 		//initialize the character arrays to hold the inputs
 		
 		p->request_type = "SET";
@@ -138,7 +138,7 @@ Params* process_args(int argc, char** argv){
 		while((iter=getopt(argc, argv,"l:t:"))!=-1){
 			printf("Iter: %c\n", iter);
 			switch(iter){
-				case 'l': p->level = atoi(optarg); break;				
+				case 'l': p->level = optarg; break;				
 				case 't': p->title = optarg; break;
 			}
 		}
@@ -153,10 +153,10 @@ Params* process_args(int argc, char** argv){
 		}else{
 			p->description = "<no description>";
 		}
-		printf("Level is: %d\n", p->level);
+		printf("Level is: %s\n", p->level);
 		printf("Title is: %s\n", p->title);
 		printf("Description is %s\n", p->description);
-		if(p->level==INT_MIN){//if the level is not provided, and kept as INT_MIN, notify and exit
+		if(p->level==NULL){//if the level is not provided, and kept as INT_MIN, notify and exit
 			fprintf(stderr, "Please provide level\n");
 			print_usage(0, argv[0]);
 			p->return_code = 2;
@@ -174,10 +174,7 @@ Params* process_args(int argc, char** argv){
 
 		printf("args good\n");
 		/*
-		char* user = (getpwuid(getuid()))->pw_name;//get the username of the user who invoked the client
-		time_t secs = time(NULL);//get the current UNIX time
-		char secs_str[64];
-		sprintf(secs_str,"%ld", secs);//convert the time into a character array for the query (TODO: Figure out proper size)
+		
 
 		query_daemon_insert(level, title, desc, user, secs_str);//create and send the query
 		*/
@@ -186,10 +183,12 @@ Params* process_args(int argc, char** argv){
 		return p;
 
 	}else if(strcmp("GET",argv[1])==0){
+		Params* p = malloc(sizeof(Params));
 		printf("GETting db");
 		p->return_code = 0;
 		return p;
 	}else{//if arg[1] is neither SET nor GET, print usage information
+		Params* p = malloc(sizeof(Params));
 		print_usage(2,argv[0]);
 		p->return_code = 4;
 		return p;
