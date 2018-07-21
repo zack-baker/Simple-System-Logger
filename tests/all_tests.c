@@ -4,6 +4,7 @@
 
 CuSuite* get_description_get_suite();
 CuSuite* process_args_get_suite();
+CuSuite* get_daemon_insert_query_get_suite();
 
 int runSuite(CuSuite* suite){
 	CuString* output = CuStringNew();
@@ -21,6 +22,7 @@ void runAllTests(){
 	int totalFails = 0;
 	totalFails += runSuite(get_description_get_suite());
 	totalFails += runSuite(process_args_get_suite());
+	totalFails += runSuite(get_daemon_insert_query_get_suite());
 	if(totalFails>0){
 		exit(1);
 	}
