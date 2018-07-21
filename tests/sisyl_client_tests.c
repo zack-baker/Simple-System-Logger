@@ -197,18 +197,28 @@ void test_get_daemon_insert_query_basic(CuTest* tc){
 	qp->description="Test description";
 	qp->level="1";
 	qp->user="zack";
-	qp->timestr="12572943";
+	qp->timestr="1234567890";
 
 	char* result = get_daemon_insert_query(qp);
 
-	CuAssertStrEquals(tc, "SET 1 Title Test description zack 12572943", result);
+	CuAssertStrEquals(tc, "SET 1 Title Test description zack 1234567890", result);
 }
 void test_get_daemon_insert_query_two_word_title(CuTest* tc){
+	QueryParams* qp = malloc(sizeof(QueryParams));
+	qp->title="Two-word title";
+	qp->description="Description";
+	qp->level="1";
+	qp->user="Zack";
+	qp->timestr="1234567890";
 
+	char* result = get_daemon_insert_query(qp);
+
+	CuAssertStrEquals(tc, "SET 1 Two-word title Description Zack 1234567890", result);
 }
 
 CuSuite* get_daemon_insert_query_get_suite(){
 	CuSuite* suite = CuSuiteNew();
 	SUITE_ADD_TEST(suite, test_get_daemon_insert_query_basic);
+	SUITE_ADD_TEST(suite, test_get_daemon_insert_query_two_word_title);
 	return suite;
 }
